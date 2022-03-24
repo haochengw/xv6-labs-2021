@@ -1,10 +1,9 @@
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
-#define STDDER_FILENO 2
+
 #define READEND 0
 #define WRITEEND 1
-#define MAXN 35
 
 void 
 seive(int p[]) {
@@ -29,7 +28,7 @@ seive(int p[]) {
             wait((int *) 0);
             exit(0);
         }
-    } else {
+    } else { // 读不到数据，直接结束
         close(p[READEND]);
         exit(0);
     }

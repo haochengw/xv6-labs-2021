@@ -24,7 +24,6 @@ fmtname(char *path)
   return buf;
 }
 
-// 两个参数为两个指向char的指针
 void find(char *path, char *target) {
 
     char buf[512], *p;
@@ -59,7 +58,7 @@ void find(char *path, char *target) {
         p = buf + strlen(buf);
         *p++ = '/'; // p后接文件名和一个'/'
         while (read(fd, &de, sizeof(de)) == sizeof(de)) {
-            if (de.inum == 0) { // inum = 0是什么意思?
+            if (de.inum == 0) {
                 continue;
             }
             memmove(p, de.name, DIRSIZ); 
