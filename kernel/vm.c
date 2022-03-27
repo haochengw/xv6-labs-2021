@@ -433,3 +433,27 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+void
+vmprint(pagetable_t pagetable, int level) {
+  if (level == 2) {
+    uint64 ptPa = PTE2PA(*pagetable);
+    printf("page table %p\n", ptPa);
+  }
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V){
+      // todo 打印(2-level)个".."
+      for (int i = 0; i < 3 - level; i++) {
+        printf(" ..");
+      }
+      uint64 pa = PTE2PA(pte);
+      // 打印PTE信息
+      printf("%d: pte %p pa %p\n", i, pte, pa);
+      // this PTE points to a lower-level page table.
+      if (level > 0) {
+        vmprint((pagetable_t)pa, level - 1);
+      }
+    }
+  }
+}
