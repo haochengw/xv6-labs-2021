@@ -127,6 +127,15 @@ found:
     return 0;
   }
 
+  // 为usyscall结构分配内存页
+  if((p->usyspage = (struct usyscall *)kalloc()) == 0) {
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+  // 初始化值
+  p->usyspage->pid = p->pid;
+
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -153,6 +162,11 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
+  // 释放usyspage对应的物理内存
+  if(p->usyspage)
+    kfree((void*)p->usyspage);
+  p->usyspage = 0;
+  // 释放进程的页表内存。
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
@@ -196,6 +210,13 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
+  // 在VA中创建一个Page，并为usyscall的pte指定映射。失败的话，前面两个要取消映射。
+  if(mappages(pagetable, USYSCALL, PGSIZE, (uint64)(p->usyspage), PTE_R | PTE_U) < 0) {
+    uvmunmap(pagetable, TRAMPOLINE, 1, 0);
+    uvmunmap(pagetable, TRAPFRAME, 1, 0);
+    uvmfree(pagetable, 0);
+    return 0;
+  }
   return pagetable;
 }
 
@@ -206,6 +227,8 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
+  uvmunmap(pagetable, USYSCALL, 1, 0);
+  // 释放页表自身的空间，释放被页表指向的地址空间。
   uvmfree(pagetable, sz);
 }
 

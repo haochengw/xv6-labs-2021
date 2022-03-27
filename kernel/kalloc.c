@@ -47,7 +47,7 @@ void
 kfree(void *pa)
 {
   struct run *r;
-
+  // free的指针应该对准了一个PAGE的起始地址。
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
@@ -55,7 +55,7 @@ kfree(void *pa)
   memset(pa, 1, PGSIZE);
 
   r = (struct run*)pa;
-
+  // 更新空闲列表
   acquire(&kmem.lock);
   r->next = kmem.freelist;
   kmem.freelist = r;

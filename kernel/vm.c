@@ -20,7 +20,8 @@ pagetable_t
 kvmmake(void)
 {
   pagetable_t kpgtbl;
-
+  
+  // 首先分配一个PGSIZE的空间，存放根PageTable
   kpgtbl = (pagetable_t) kalloc();
   memset(kpgtbl, 0, PGSIZE);
 
@@ -62,7 +63,7 @@ void
 kvminithart()
 {
   w_satp(MAKE_SATP(kernel_pagetable));
-  sfence_vma();
+  sfence_vma(); // 在初始化和执行trampoline代码后都会更新TLB
 }
 
 // Return the address of the PTE in page table pagetable
@@ -143,9 +144,9 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
   if(size == 0)
     panic("mappages: size");
   
-  a = PGROUNDDOWN(va);
-  last = PGROUNDDOWN(va + size - 1);
-  for(;;){
+  a = PGROUNDDOWN(va); // 起点的低12位
+  last = PGROUNDDOWN(va + size - 1); // 终点的低12位
+  for(;;){ // 从a分配到last
     if((pte = walk(pagetable, a, 1)) == 0)
       return -1;
     if(*pte & PTE_V)

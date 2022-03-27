@@ -345,7 +345,7 @@ sfence_vma()
 #define PTE_U (1L << 4) // 1 -> user can access
 
 // shift a physical address to the right place for a PTE.
-#define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)
+#define PA2PTE(pa) ((((uint64)pa) >> 12) << 10) // 12位是4096Bytes，一个Page的大小，10是一些Flags的大小
 
 #define PTE2PA(pte) (((pte) >> 10) << 12)
 
