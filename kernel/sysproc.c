@@ -81,6 +81,34 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
+  // 1 获取相关参数
+  uint64 va; // 起始虚拟地址
+  int cnt; // 查看的page数量
+  uint64 user; // 要拷贝到user态的地址
+
+  argaddr(0, &va);
+  argint(1, &cnt);
+  argaddr(2, &user);
+
+  if (cnt > 64) {
+      return -1;
+  }
+
+  // 2 遍历
+  struct proc *p = myproc();
+  if (p == 0)
+      return -1;
+  pagetable_t pt = p->pagetable;
+  uint64 flag = 0; // 以bit为单位标识page是否已access
+
+  for (int i = 0; i < cnt; i++) {
+      pte_t *pte = walk(pt, va + (i * PGSIZE), 0);
+      if (*pte & PTE_A) {
+          flag = flag | (1 << i);
+          *pte = (*pte) & (~(PTE_A));
+      }
+  }
+  copyout(pt, user, (char *) &flag, sizeof(flag));
   return 0;
 }
 #endif
